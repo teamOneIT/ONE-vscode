@@ -692,11 +692,9 @@ class NodeAttributeEditView {
                 if (content && typeof content === 'string') {
                     content = content.split('<').join('&lt;').split('>').join('&gt;');
                 }
-                const line = this._host.document.createElement('div');
-                const lineInput = this._host.document.createElement('input');
-                lineInput.setAttribute('type', 'text')
-                lineInput.setAttribute('value', content ? content : '&nbsp;');
-                line.appendChild(lineInput);
+                const line = this._host.document.createElement('input');
+                line.setAttribute('type', 'text')
+                line.setAttribute('value', content ? content : '&nbsp;');
                 line.className = 'sidebar-view-item-value-line';
                 this._element.appendChild(line);
                 this._typeview();
