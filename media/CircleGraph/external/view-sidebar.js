@@ -241,7 +241,7 @@ sidebar.NodeSidebar = class {
         item.on('show-graph', (sender, graph) => {
             this._raise('show-graph', graph);
         });
-        const view = new sidebar.NameValueView(this._host, name, item);
+        const view = new sidebar.EditNameValueView(this._host, name, item);
         this._attributes.push(view);
         // this._elements.push(view.render());
         return view.render();
@@ -334,10 +334,16 @@ sidebar.NodeSidebar = class {
             const bu = b.name.toUpperCase();
             return au < bu ? -1 : au > bu ? 1 : 0;
         });
+        const linetop = this._host.document.createElement('div');
+        linetop.className = 'line';
+        attributesBox.appendChild(linetop);
         for (const attribute of sortedAttributes) {
             const attributeElement = this._addAttributeEdit(attribute.name, attribute);
             attributesBox.appendChild(attributeElement);
         }
+        const separator = this._host.document.createElement('div');
+        separator.className = 'sidebar-view-separator';
+        attributesBox.appendChild(separator);
     }
 
     _save(modifyButton, saveButton, cancelButton) {
@@ -428,6 +434,55 @@ sidebar.NameValueView = class {
 
         const valueElement = this._host.document.createElement('div');
         valueElement.className = 'sidebar-view-item-value-list';
+
+        for (const element of value.render()) {
+            valueElement.appendChild(element);
+        }
+
+        this._element = this._host.document.createElement('div');
+        this._element.className = 'sidebar-view-item';
+        this._element.appendChild(nameElement);
+        this._element.appendChild(valueElement);
+    }
+
+    get name() {
+        return this._name;
+    }
+
+    render() {
+        return this._element;
+    }
+
+    toggle() {
+        this._value.toggle();
+    }
+};
+
+sidebar.EditNameValueView = class {
+
+    constructor(host, name, value) {
+        this._host = host;
+        this._name = name;
+        this._value = value;
+
+        const nameElement = this._host.document.createElement('div');
+        nameElement.className = 'sidebar-view-item-name-edit';
+
+        nameElement.innerText=name;
+
+        const valueElement = this._host.document.createElement('div');
+        valueElement.className = 'sidebar-view-item-edit-list';
+        const titleBox = this._host.document.createElement('div');
+        titleBox.className = 'sidebar-view-item-edit-title-box';
+        const valueTitle = this._host.document.createElement('div');
+        const typeTitle = this._host.document.createElement('div');
+        valueTitle.className = 'sidebar-view-item-edit-title';
+        typeTitle.className = 'sidebar-view-item-edit-title';
+        valueTitle.innerText = 'Value';
+        typeTitle.innerText = 'Type';
+        titleBox.appendChild(valueTitle);
+        titleBox.appendChild(typeTitle);
+        valueElement.appendChild(titleBox);
 
         for (const element of value.render()) {
             valueElement.appendChild(element);
@@ -657,7 +712,7 @@ class NodeAttributeEditView {
         this._host = host;
         this._attribute = attribute;
         this._element = this._host.document.createElement('div');
-        this._element.className = 'sidebar-view-item-value';
+        this._element.className = 'sidebar-view-item-edit-value';
 
         const type = this._attribute.type;
         const value = this._attribute.value;
@@ -693,9 +748,9 @@ class NodeAttributeEditView {
                     content = content.split('<').join('&lt;').split('>').join('&gt;');
                 }
                 const line = this._host.document.createElement('input');
+                line.className = 'sidebar-view-item-value-line-input';
                 line.setAttribute('type', 'text')
                 line.setAttribute('value', content ? content : '&nbsp;');
-                line.className = 'sidebar-view-item-value-line';
                 this._element.appendChild(line);
                 this._typeview();
             }
@@ -708,14 +763,14 @@ class NodeAttributeEditView {
 
     _typeview() {
         const typeLine = this._host.document.createElement('div');
-        typeLine.className = 'sidebar-view-item-value-line-border';
+        typeLine.className = 'sidebar-view-item-value-line-input';
         const type = this._attribute.type;
         const value = this._attribute.value;
         if (type == 'tensor' && value && value.type) {
-            typeLine.innerHTML = 'type: ' + '<code><b>' + value.type.toString() + '</b></code>';
+            typeLine.innerHTML = '<code><b>' + value.type.toString() + '</b></code>';
             this._element.appendChild(typeLine);
         } else {
-            typeLine.innerHTML = 'type: ' + '<code><b>' + this._attribute.type + '</b></code>';
+            typeLine.innerHTML = '<code><b>' + this._attribute.type + '</b></code>';
             this._element.appendChild(typeLine);
         }
 
