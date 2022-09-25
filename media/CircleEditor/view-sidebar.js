@@ -778,6 +778,7 @@ class NodeAttributeView {
                 this._element.appendChild(line);
             }
             if(type){
+
                 const typeLine = this._host.document.createElement('div');
                 typeLine.className = 'sidebar-view-item-value-line-border';
                 if(!this._isCustom){

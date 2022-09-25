@@ -840,6 +840,7 @@ view.View = class {
                             this.show('default');
                         }
                     }
+
                     for (let idx = 0; idx < model.graphs.length; idx++) {
                         model._graphs[idx]['_subgraphIdx'] = idx;
                         for (let jdx = 0; jdx < model.graphs[idx].nodes.length; jdx++) {
