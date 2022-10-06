@@ -22,6 +22,7 @@ import {CircleEditorProvider} from './CircleEditor/CircleEditorProvider';
 import {CircleViewerProvider} from './CircleGraph/CircleViewer';
 import {DeviceViewProvider} from './Execute/DeviceViewProvider';
 import {JsonTracerViewerPanel} from './Jsontracer/JsonTracerViewerPanel';
+import {MetadataViewerProvider} from './MetadataViewer/MetadataViewerProvider';
 import {MondrianEditorProvider} from './Mondrian/MondrianEditor';
 import {OneTreeDataProvider} from './OneExplorer/OneExplorer';
 import {PartEditorProvider} from './PartEditor/PartEditor';

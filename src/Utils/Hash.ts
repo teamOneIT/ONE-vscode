@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-import {Command} from '../Backend/Command';
-import {JobType} from '../Job/Job';
-import {JobCommand} from '../Job/JobCommand';
+import * as crypto from 'crypto';
+import vscode from 'vscode';
 
-class JobPrerequisites extends JobCommand {
-  jobType: JobType;
-  name: string;
-  valid: boolean;
-
-  constructor(cmd: Command) {
-    super(cmd);
-    this.jobType = JobType.tPrerequisites;
-    this.name = 'prerequisites';
-    this.valid = true;
-  }
+export async function generateHash(uri: vscode.Uri) {
+  // TODO: Error handling
+  return crypto.createHash('sha256')
+      .update(Buffer.from(await vscode.workspace.fs.readFile(uri)).toString())
+      .digest('hex');
 }
-
-export {JobPrerequisites};

@@ -147,4 +147,4 @@ var builtinOperatorType = {
     'BCQGATHER': 252,
     'BCQFULLYCONNECTED': 253,
     'INSTANCENORM': 254
-}
+};
