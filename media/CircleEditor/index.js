@@ -150,8 +150,8 @@ host.BrowserHost = class {
                 case 'reload':
                     this._msgReload(message);
                     break;
-                case 'setCustomOpAttrT':
-                    this._msgSetCustomOpAttr(message);
+                case 'customType':
+                    this._msgGetType(message);
                     break;
                 case 'loadJson':
                     if (this._view._jsonEditorOpened) {
@@ -460,6 +460,10 @@ host.BrowserHost = class {
             });
     }
 
+    /**
+     * if subgraphIdx and nodeIdx aren't null,
+     * reload to reflect the modifications
+     */
     _open(file, files) {
         this._view.show('welcome spinner');
         const context = new host.BrowserHost.BrowserFileContext(this, file, files);
@@ -556,7 +560,7 @@ host.BrowserHost = class {
         vscode.postMessage({command: 'loadmodel', offset: '0'});
     }
 
-    _msgSetCustomOpAttrT(message) {
+    _msgGetType(message) {
         const data = message.data;
         const graphs = this._view._model._graphs;
         const types = data._type;
