@@ -1671,7 +1671,7 @@ sidebar.ArgumentView = class {
             return;
         }
     
-        const originalArr = this.removeBracket(this._argument._initializer.toString()); //---> 파일 이동 후 원본데이터 가져오면 주석 해제해서 쓰기
+        const originalArr = this.removeBracket(this._argument._initializer.toString());
     
         /* compare changed elements and update data */
         const types = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'boolean', 'int16',
@@ -1687,7 +1687,7 @@ sidebar.ArgumentView = class {
     /* buffer type modified - data change NOT detected */
     changeBufferType(newType, modified, shape) {
         // original = textarea.value
-        const modifiedArr = this.validationCheck(modified, shape); //---> 파일 이동 후 원본데이터 가져오면 주석 해제해서 쓰기
+        const modifiedArr = this.validationCheck(modified, shape);
         
         if (!modifiedArr) {
             return;
