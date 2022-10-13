@@ -181,6 +181,15 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
       case MessageDefs.requestEncodingData:
         document.sendEncodingData(message);
         return;
+      case 'loadJsonModelOptions':
+        document.loadJsonModelOptions();
+        return;
+      case 'loadJsonModelSubgraphs':
+        document.loadJsonModelSubgraphs();
+        return;
+      case 'loadJsonModelBuffers':
+        document.loadJsonModelBuffers();
+        return;
       default:
         // TODO: add MessageDefs and appropriate function to handle this request
         return;

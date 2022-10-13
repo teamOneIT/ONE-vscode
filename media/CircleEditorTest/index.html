@@ -19,7 +19,11 @@
   <button id="loadJsonBtn">load Json 버튼</button><br>
   <button id="updateJsonBtn"> update json버튼</button><br>
   <button id="sendEncodingDataBtn"> sendEncodingDataBtn</button><br>
-  
+  <br>
+  <br>
+  <button id="loadJsonOptionBtn">load Json Option 버튼</button><br>
+  <button id="loadJsonSubgraphBtn">load Json Subgraph 버튼</button><br>
+  <button id="loadJsonBufferBtn">load Json Buffer 버튼</button><br>
 
   <textarea id = "input model" style ="width: 100%; height: 1000px;"></textarea>
   <div id = "json model" style ="color: white; width: 200px; height: 200px;" ></div>
@@ -33,6 +37,31 @@
         type: "dd", command: "loadmodel", offset: '0'
       });
     });
+
+    const loadJsonOptionBtn = document.querySelector("#loadJsonOptionBtn");
+    loadJsonOptionBtn.addEventListener("click", e => {
+      e.preventDefault();
+      vscode.postMessage({
+        command: "loadJsonModelOptions"
+      });
+    });
+
+    const loadJsonSubgraphBtn = document.querySelector("#loadJsonSubgraphBtn");
+    loadJsonSubgraphBtn.addEventListener("click", e => {
+      e.preventDefault();
+      vscode.postMessage({
+        command: "loadJsonModelSubgraphs"
+      });
+    });
+
+    const loadJsonBufferBtn = document.querySelector("#loadJsonBufferBtn");
+    loadJsonBufferBtn.addEventListener("click", e => {
+      e.preventDefault();
+      vscode.postMessage({
+        command: "loadJsonModelBuffers"
+      });
+    });
+
 
     const ExceptionBtn = document.querySelector("#ExceptionBtn");
     ExceptionBtn.addEventListener("click", e => {
@@ -167,13 +196,10 @@
 
 
     window.addEventListener("message", (e) => {
-      console.log("editor");
       console.log(e.data);
       if (e.data.command === "loadmodel") {
         console.log("postMessage호출  " + e);
-        
         if(e.data.type === "modelpath") return;
-        
         vscode.postMessage({ command: 'loadmodel', offset: e.data.offset + e.data.length + "" });
       }
       
@@ -184,6 +210,16 @@
         document.getElementById("input model").innerHTML = modelJson;
         document.getElementById("json model").innerHTML = modelJson;
       }
+
+      if(e.data.command ==="loadJsonMulti"){
+        console.log(e.data);
+        let modelJson = [];
+        modelJson.push(e.data.data.options);
+        modelJson.push(e.data.data.subgraphs);
+        modelJson.push(e.data.data.buffers);
+      }
+
+
     })
   </script>
 </body>

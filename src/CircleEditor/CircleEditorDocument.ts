@@ -369,6 +369,58 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     this._onDidChangeContent.fire(responseJson);
   }
 
+  loadJsonModelOptions() {
+    //TODO: stringify bigint type data
+    let optionData:string = '';
+    Object.entries(this._model).forEach(e => {
+      if(e[0]==='subgraphs'||e[0]==='buffers'){return;}
+      optionData+=`'${e[0]}':`;
+      optionData+=((typeof e[1] === 'string')?e[1]:JSON.stringify(e[1]))+',\n';
+    });
+    optionData = optionData.slice(0,-2);
+    this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'options', data: optionData});
+  }
+
+  loadJsonModelSubgraphs() {
+    let subgraphData:string[] = [];
+    Object.entries(this._model.subgraphs).forEach(e=>{
+      subgraphData.push(JSON.stringify(e[1]));
+    });
+    this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'subgraphs', data: subgraphData});
+  }
+
+  loadJsonModelBuffers(){
+    let buffersData:string[][] = [];
+    Object.entries(this._model.buffers).forEach(e => {
+      let value:string[] = [];
+      if(e[1].data.length>300000) { //slice if buffer data string can be over 1,000,000
+        let tmp = 0;
+        while(tmp<e[1].data.length){
+          value.push(JSON.stringify(e[1].data.slice(tmp, tmp+300000)));
+          tmp +=300000;
+        }
+      }else{
+        value.push(JSON.stringify(e[1]));
+      }
+      buffersData.push(value);
+    });
+    console.log(buffersData);
+
+    // let responseJson = {command: 'loadJsonMulti', type: "buffers", data: bufferData};
+    // this._onDidChangeContent.fire(responseJson);
+  }
+
+  trimString(str:string): string {
+    let strArray = str.match(/\[[0-9,\s]*\]/gi);
+    if (strArray) {
+      strArray.forEach(text => {
+        let replaced = text.replace(/,\s*/gi, ', ').replace(/\[\s*/gi, '[').replace(/\s*\]/gi, ']');
+        str = str.replace(text, replaced);
+      });
+    }
+    return str;
+  }
+
   /**
    * Guess data's type (int or float)
    */
