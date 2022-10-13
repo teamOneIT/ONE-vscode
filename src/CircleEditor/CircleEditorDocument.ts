@@ -389,8 +389,17 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'subgraphs', data: subgraphData});
   }
 
-  loadJsonModelBuffers(){
-    let buffersData:string[][] = [];
+  //slice buffer data, maximum size 300,000 uint element so that string length does not exceed 1,000,000
+  loadJsonModelBuffers(message:any){
+    let bufferIdx:number = message.bufferIdx;
+    let pageIdx:number = message.pageIdx-1; //index starts from 0
+//TODO: exception when out of range
+    let value = this._model.buffers[bufferIdx].data;
+    value = value.slice(300000*pageIdx, 300000*(pageIdx+1));
+    this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'buffers', data: JSON.stringify(value)});
+
+    //do not need here, but just keep this for checking buffer numbers
+    let buffersArray:string[][] = [];
     Object.entries(this._model.buffers).forEach(e => {
       let value:string[] = [];
       if(e[1].data.length>300000) { //slice if buffer data string can be over 1,000,000
@@ -402,12 +411,9 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
       }else{
         value.push(JSON.stringify(e[1]));
       }
-      buffersData.push(value);
+      buffersArray.push(value);
     });
-    console.log(buffersData);
-
-    // let responseJson = {command: 'loadJsonMulti', type: "buffers", data: bufferData};
-    // this._onDidChangeContent.fire(responseJson);
+    console.log(buffersArray);
   }
 
   trimString(str:string): string {

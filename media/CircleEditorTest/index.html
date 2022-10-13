@@ -58,11 +58,36 @@
     loadJsonBufferBtn.addEventListener("click", e => {
       e.preventDefault();
       vscode.postMessage({
-        command: "loadJsonModelBuffers"
+        command: "loadJsonModelBuffers", bufferIdx:284, pageIdx:2
       });
     });
 
 
+    window.addEventListener("message", (e) => {
+      console.log(e.data);
+      if (e.data.command === "loadmodel") {
+        console.log("postMessage호출  " + e);
+        if(e.data.type === "modelpath") return;
+        vscode.postMessage({ command: 'loadmodel', offset: e.data.offset + e.data.length + "" });
+      }
+      
+      if(e.data.command ==="loadJson"){
+        console.log(e.data.data);
+        let modelJson = "";
+        modelJson = e.data.data;
+        document.getElementById("input model").innerHTML = modelJson;
+        document.getElementById("json model").innerHTML = modelJson;
+      }
+
+      if(e.data.command ==="loadJsonMulti"){
+        console.log(e.data);
+        document.getElementById("input model").innerHTML = e.data.data;
+      }
+
+
+    })
+  
+    
     const ExceptionBtn = document.querySelector("#ExceptionBtn");
     ExceptionBtn.addEventListener("click", e => {
       e.preventDefault();
@@ -73,11 +98,11 @@
 
     const loadJsonBtn = document.querySelector("#loadJsonBtn");
     loadJsonBtn.addEventListener("click", e => {
-      e.preventDefault();
-      vscode.postMessage({
-        command: "loadJson"
+        e.preventDefault();
+        vscode.postMessage({
+          command: "loadJson"
+      });
     });
-});
 
     const updateJsonBtn = document.querySelector("#updateJsonBtn");
     updateJsonBtn.addEventListener("click", e => {
@@ -195,32 +220,6 @@
     });
 
 
-    window.addEventListener("message", (e) => {
-      console.log(e.data);
-      if (e.data.command === "loadmodel") {
-        console.log("postMessage호출  " + e);
-        if(e.data.type === "modelpath") return;
-        vscode.postMessage({ command: 'loadmodel', offset: e.data.offset + e.data.length + "" });
-      }
-      
-      if(e.data.command ==="loadJson"){
-        console.log(e.data.data);
-        let modelJson = "";
-        modelJson = e.data.data;
-        document.getElementById("input model").innerHTML = modelJson;
-        document.getElementById("json model").innerHTML = modelJson;
-      }
-
-      if(e.data.command ==="loadJsonMulti"){
-        console.log(e.data);
-        let modelJson = [];
-        modelJson.push(e.data.data.options);
-        modelJson.push(e.data.data.subgraphs);
-        modelJson.push(e.data.data.buffers);
-      }
-
-
-    })
   </script>
 </body>
 
