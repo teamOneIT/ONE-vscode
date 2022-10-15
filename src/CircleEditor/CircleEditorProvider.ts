@@ -170,25 +170,49 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
         document.makeEdit(message);
         return;
       case MessageDefs.loadJson:
-        document.loadJson();
+        if(message.type === 'entireModel') {
+          document.loadJson();
+          return;
+        }else if(message.type === 'partOfModel') {
+          if(message.part === 'options') {
+            document.loadJsonModelOptions();
+            return;
+          }else if(message.part === 'subgraphs') {
+            document.loadJsonModelSubgraphs();
+            return;
+          }else if(message.part === 'buffers') {
+            document.loadJsonModelBuffers(message);
+            return;
+          }else{
+            return;
+          }
+        }
         return;
       case MessageDefs.updateJson:
-        document.editJsonModel(message.data);
-        return;
+        if(message.type === 'entireModel'){
+          document.editJsonModel(message.data);
+          return;
+        }else if(message.type === 'partOfModel'){
+          if(message.part === 'options') {
+          
+            return;
+          }else if(message.part === 'subgraphs') {
+
+            return;
+          }else if(message.part === 'buffers') {
+
+            return;
+          }else{
+            return;
+          }
+        }else{
+          return;
+        }
       case MessageDefs.getCustomOpAttrT:
         document.setCustomOpAttrT(message);
         return;
       case MessageDefs.requestEncodingData:
         document.sendEncodingData(message);
-        return;
-      case 'loadJsonModelOptions':
-        document.loadJsonModelOptions();
-        return;
-      case 'loadJsonModelSubgraphs':
-        document.loadJsonModelSubgraphs();
-        return;
-      case 'loadJsonModelBuffers':
-        document.loadJsonModelBuffers(message);
         return;
       default:
         // TODO: add MessageDefs and appropriate function to handle this request

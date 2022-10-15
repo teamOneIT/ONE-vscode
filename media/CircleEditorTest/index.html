@@ -42,7 +42,7 @@
     loadJsonOptionBtn.addEventListener("click", e => {
       e.preventDefault();
       vscode.postMessage({
-        command: "loadJsonModelOptions"
+        command: "loadJson", type: "partOfModel", part: 'options'
       });
     });
 
@@ -50,7 +50,7 @@
     loadJsonSubgraphBtn.addEventListener("click", e => {
       e.preventDefault();
       vscode.postMessage({
-        command: "loadJsonModelSubgraphs"
+        command: "loadJson", type: 'partOfModel', part: 'subgraphs'
       });
     });
 
@@ -58,7 +58,7 @@
     loadJsonBufferBtn.addEventListener("click", e => {
       e.preventDefault();
       vscode.postMessage({
-        command: "loadJsonModelBuffers", bufferIdx:284, pageIdx:2
+        command: "loadJson", type: 'partOfModel', part: 'buffers', bufferIdx:284, pageIdx:2
       });
     });
 
@@ -100,7 +100,7 @@
     loadJsonBtn.addEventListener("click", e => {
         e.preventDefault();
         vscode.postMessage({
-          command: "loadJson"
+          command: "loadJson", type: 'entireModel'
       });
     });
 
