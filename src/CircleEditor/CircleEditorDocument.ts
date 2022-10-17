@@ -427,6 +427,49 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     return str;
   }
 
+  editJsonModelOptions(inputModelOptions: string) {
+    const oldModelData = this.modelData;
+    try{
+      let newModelOptions = JSON.parse(inputModelOptions);
+
+      //version
+      this._model.version = newModelOptions.version;
+
+      //operatorCodes
+      this._model.operatorCodes = newModelOptions.operatorCodes.map((data: Circle.OperatorCodeT) => {
+        return Object.setPrototypeOf(data, Circle.OperatorCodeT.prototype);
+      });
+
+      // description
+      this._model.description = newModelOptions.description;
+
+      // metadataBuffer
+      this._model.metadataBuffer = newModelOptions.metadataBuffer;
+
+      // metadata
+      this._model.metadata = newModelOptions.metadata.map((data: Circle.MetadataT) => {
+        return Object.setPrototypeOf(data, Circle.MetadataT.prototype);
+      });
+
+      // signatureDefs
+      this._model.signatureDefs = newModelOptions.signatureDefs.map((data: Circle.SignatureDefT) => {
+        data.inputs = data.inputs.map((tensor: Circle.TensorMapT) => {
+          return Object.setPrototypeOf(tensor, Circle.TensorMapT.prototype);
+        });
+        data.outputs = data.outputs.map((tensor: Circle.TensorMapT) => {
+          return Object.setPrototypeOf(tensor, Circle.TensorMapT.prototype);
+        });
+        return Object.setPrototypeOf(data, Circle.SignatureDefT.prototype);
+      });
+
+      const newModelData = this.modelData;
+      this.notifyEdit(oldModelData, newModelData);
+      
+    } catch (e) {
+      this._model = this.loadModel(oldModelData);
+      Balloon.error('invalid model', false); 
+    }
+  }
   /**
    * Guess data's type (int or float)
    */

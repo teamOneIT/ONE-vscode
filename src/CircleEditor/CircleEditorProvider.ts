@@ -194,7 +194,7 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
           return;
         }else if(message.type === 'partOfModel'){
           if(message.part === 'options') {
-          
+            document.editJsonModelOptions(message.data);
             return;
           }else if(message.part === 'subgraphs') {
 
