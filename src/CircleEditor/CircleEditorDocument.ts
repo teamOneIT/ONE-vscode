@@ -470,6 +470,15 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
       Balloon.error('invalid model', false); 
     }
   }
+
+  editJsonModelSubgraphs(inputModelSubgraphs: string) {
+
+  }
+
+  editJsonModelBuffers(inputModelBuffers: string) {
+
+  }
+
   /**
    * Guess data's type (int or float)
    */
