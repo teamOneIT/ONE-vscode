@@ -471,13 +471,135 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     }
   }
 
-  editJsonModelSubgraphs(inputData: any) {
+  /**
+   * This method is used for add, remove, replace subgraph data.
+   * When index is -1, subgraph is added to subgraphs.
+   * When subgraphString is null, subgraph of that index is removed.
+   * @param index An element at this index will be changed.
+   * @param subgraphString string for new subgraph data
+   */
+  editJsonModelSubgraphs(index: number, subgraphString: string|null = null) {
     const oldModelData = this.modelData;
-    let subgraphIdx = inputData.Idx;
+    try {
+      if (subgraphString === null) {
+        // remove subgraph
+        if (index >= 0 && index < this._model.buffers.length) {
+          this._model.subgraphs.splice(index, 1);
+        } else {
+          throw new Error;
+        }
+      } else {
+        let subgraphData = JSON.parse(subgraphString);
+        // tensors
+        subgraphData.tensors = subgraphData.tensors.map((tensor: Circle.TensorT) => {
+          if (tensor.quantization) {
+            if (tensor.quantization.details) {
+              tensor.quantization.details = Object.setPrototypeOf(tensor.quantization?.details, Circle.CustomQuantizationT.prototype);
+            }
+            tensor.quantization.zeroPoint = tensor.quantization.zeroPoint.map(value => {
+              return BigInt(value);
+            });
+            tensor.quantization = Object.setPrototypeOf(
+                tensor.quantization, Circle.QuantizationParametersT.prototype);
+          }
+          // sparsity parameters
+          if (tensor.sparsity) {
+            if (tensor.sparsity.dimMetadata) {
+              tensor.sparsity.dimMetadata =
+                  tensor.sparsity.dimMetadata.map((dimMeta: Circle.DimensionMetadataT) => {
+                    if (dimMeta.arraySegmentsType && dimMeta.arraySegments) {
+                      const sparseVectorClass = Object.entries(Types.SparseVector).find(element => {
+                        return dimMeta.arraySegmentsType === parseInt(element[0]);
+                      });
+                      if (sparseVectorClass && sparseVectorClass[1]) {
+                        dimMeta.arraySegments = Object.setPrototypeOf(
+                            dimMeta.arraySegments, sparseVectorClass[1].prototype);
+                      }
+                    } else {
+                      dimMeta.arraySegments = null;
+                    }
+                    if (dimMeta.arrayIndicesType && dimMeta.arrayIndices) {
+                      const sparseVectorClass = Object.entries(Types.SparseVector).find(element => {
+                        return dimMeta.arrayIndicesType === parseInt(element[0]);
+                      });
+                      if (sparseVectorClass && sparseVectorClass[1]) {
+                        dimMeta.arrayIndices = Object.setPrototypeOf(
+                            dimMeta.arrayIndices, sparseVectorClass[1].prototype);
+                      }
+                    } else {
+                      dimMeta.arrayIndices = null;
+                    }
+                    return Object.setPrototypeOf(dimMeta, Circle.DimensionMetadataT.prototype);
+                  });  // end map dimMeta
 
-    this._model.subgraphs[subgraphIdx] = JSON.parse(inputData.subgraph);
-//TODO: setPrototypeOf, try-catch
-    
+              if (!tensor.sparsity.traversalOrder || !tensor.sparsity.traversalOrder.length) {
+                tensor.sparsity.traversalOrder = [];
+              }
+              if (!tensor.sparsity.blockMap || !tensor.sparsity.blockMap.length) {
+                tensor.sparsity.blockMap = [];
+              }
+              Object.setPrototypeOf(
+                  tensor.sparsity.dimMetadata, Circle.DimensionMetadataT.prototype);
+            }  // end if tensor.sparsity.dimMetadata
+
+            tensor.sparsity =
+                Object.setPrototypeOf(tensor.sparsity, Circle.SparsityParametersT.prototype);
+          }  // end if tensor.sparsity
+
+          return Object.setPrototypeOf(tensor, Circle.TensorT.prototype);
+        });
+
+        // operators
+        subgraphData.operators = subgraphData.operators.map((operator: Circle.OperatorT) => {
+          if (this._model.operatorCodes[operator.opcodeIndex].deprecatedBuiltinCode === 32) {
+            // case1 : custom operator
+            if (operator.builtinOptionsType || operator.builtinOptions) {
+              throw new Error;
+            }
+          } else {
+            // case2 : builtin operator
+            const optionsClass = Object.entries(Types.NumberToBuiltinOptions).find(element => {
+              return operator.builtinOptionsType === parseInt(element[0]);
+            });
+            if (optionsClass && optionsClass[1] && operator.builtinOptions) {
+              let tmpBuiltinOptions = new optionsClass[1];
+              Object.keys(operator.builtinOptions).forEach((element) => {
+                if (!(element in tmpBuiltinOptions)) {
+                  throw new Error;
+                }
+              });
+              Object.keys(tmpBuiltinOptions).forEach((element) => {
+                if (operator.builtinOptions && !(element in operator.builtinOptions)) {
+                  throw new Error;
+                }
+              });
+              operator.builtinOptions = Object.setPrototypeOf(
+                  operator.builtinOptions === null ? {} : operator.builtinOptions,
+                  optionsClass[1].prototype);
+            } else {
+              operator.builtinOptions = null;
+            }
+          }
+          return Object.setPrototypeOf(operator, Circle.OperatorT.prototype);
+        });
+        const subgraphObejct = Object.setPrototypeOf(subgraphData, Circle.SubGraphT.prototype);
+
+        if (index === -1) {
+          // add new subgraph
+          this._model.subgraphs.push(subgraphObejct);
+        } else if(index >= 0 && index < this._model.buffers.length) {
+          // replace old subgraph with new subgraph
+          this._model.subgraphs[index] = subgraphObejct;
+        } else {
+          throw new Error;
+        }
+      }
+      const newModelData = this.modelData;
+      this.notifyEdit(oldModelData, newModelData);
+    } catch (e) {
+      this._model = this.loadModel(oldModelData);
+      Balloon.error('invalid request', false);
+    }
   }
 
   editJsonModelBuffers(inputData: any) {
