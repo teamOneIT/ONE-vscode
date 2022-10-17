@@ -471,12 +471,26 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     }
   }
 
-  editJsonModelSubgraphs(inputModelSubgraphs: string) {
+  editJsonModelSubgraphs(inputData: any) {
+    const oldModelData = this.modelData;
+    let subgraphIdx = inputData.Idx;
 
+    this._model.subgraphs[subgraphIdx] = JSON.parse(inputData.subgraph);
+//TODO: setPrototypeOf, try-catch
+    
   }
 
-  editJsonModelBuffers(inputModelBuffers: string) {
-
+  editJsonModelBuffers(inputData: any) {
+    const oldModelData = this.modelData;
+    let bufferIdx:number = inputData.bufferIdx;
+    let pageIdx:number = inputData.pageIdx-1;
+//TODO: check inputData.buffer length
+    for(let i=300000*pageIdx; i<(300000*pageIdx+inputData.buffer.length); i++){
+      //if(i>=this._model.buffers[bufferIdx].data.length){break;} TODO: decide whether this line is required
+      this._model.buffers[bufferIdx].data[i] = inputData.buffer[i-300000*pageIdx];
+    }
+    const newModelData = this.modelData;
+    this.notifyEdit(oldModelData, newModelData);
   }
 
   /**
