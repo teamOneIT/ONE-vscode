@@ -33,6 +33,7 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
   private readonly _uri: vscode.Uri;
   private _model: Circle.ModelT;
   private readonly packetSize = 1024 * 1024 * 1024;
+  private modelBufferArray: any[] = [];
 
   public get uri(): vscode.Uri {
     return this._uri;
@@ -369,6 +370,19 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     this._onDidChangeContent.fire(responseJson);
   }
 
+  openJsonEditor() {
+    this.modelBufferArray = [];
+    for(let i=0; i<this._model.buffers.length; i++){
+      this.modelBufferArray.push([]);
+      let buffer = this._model.buffers[i].data;
+      let tmpIdx = 0;
+      while(buffer.length>0){
+        this.modelBufferArray[i].push(buffer.splice(tmpIdx, tmpIdx+300000));
+        tmpIdx+=300000;
+      }
+    }
+  }
+
   loadJsonModelOptions() {
     //TODO: stringify bigint type data
     let optionData:string = '';
@@ -389,31 +403,13 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'subgraphs', data: subgraphData});
   }
 
-  //slice buffer data, maximum size 300,000 uint element so that string length does not exceed 1,000,000
   loadJsonModelBuffers(message:any){
     let bufferIdx:number = message.bufferIdx;
     let pageIdx:number = message.pageIdx-1; //index starts from 0
 //TODO: exception when out of range
-    let value = this._model.buffers[bufferIdx].data;
-    value = value.slice(300000*pageIdx, 300000*(pageIdx+1));
+    let value = this.modelBufferArray[bufferIdx][pageIdx];
     this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'buffers', data: JSON.stringify(value)});
-
-    //do not need here, but just keep this for checking buffer numbers
-    let buffersArray:string[][] = [];
-    Object.entries(this._model.buffers).forEach(e => {
-      let value:string[] = [];
-      if(e[1].data.length>300000) { //slice if buffer data string can be over 1,000,000
-        let tmp = 0;
-        while(tmp<e[1].data.length){
-          value.push(JSON.stringify(e[1].data.slice(tmp, tmp+300000)));
-          tmp +=300000;
-        }
-      }else{
-        value.push(JSON.stringify(e[1]));
-      }
-      buffersArray.push(value);
-    });
-    console.log(buffersArray);
+    //TODO: 대괄호 처리
   }
 
   trimString(str:string): string {

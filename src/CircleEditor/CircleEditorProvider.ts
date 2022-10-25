@@ -169,6 +169,9 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
       case MessageDefs.edit:
         document.makeEdit(message);
         return;
+      case 'openJsonEditor':
+        document.openJsonEditor();
+        return;
       case MessageDefs.loadJson:
         if(message.type === 'entireModel') {
           document.loadJson();
