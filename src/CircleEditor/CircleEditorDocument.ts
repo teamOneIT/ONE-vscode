@@ -370,7 +370,7 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     this._onDidChangeContent.fire(responseJson);
   }
 
-  openJsonEditor() {
+  setBufferArray() {
     this.modelBufferArray = [];
     for(let i=0; i<this._model.buffers.length; i++){
       this.modelBufferArray.push([]);
@@ -381,6 +381,8 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
         tmpIdx+=300000;
       }
     }
+    this._onDidChangeContent.fire({command: 'openJsonEditor',
+    data: {subgraphLen: this._model.subgraphs.length, bufferLen: this._model.buffers.length}});
   }
 
   loadJsonModelOptions() {
@@ -598,14 +600,31 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     }
   }
 
-  editJsonModelBuffers(inputData: any) {
+  editJsonModelBuffers(message: any) {
     const oldModelData = this.modelData;
-    let bufferIdx:number = inputData.bufferIdx;
-    let pageIdx:number = inputData.pageIdx-1;
-//TODO: check inputData.buffer length
-    for(let i=300000*pageIdx; i<(300000*pageIdx+inputData.buffer.length); i++){
-      //if(i>=this._model.buffers[bufferIdx].data.length){break;} TODO: decide whether this line is required
-      this._model.buffers[bufferIdx].data[i] = inputData.buffer[i-300000*pageIdx];
+    try{
+      let bufferIdx:number = message.bufferIdx;
+      switch (message.type) {
+        case 'add':
+          this._model.buffers.splice(bufferIdx, 0, new Circle.BufferT([]));
+          //TODO: wrong buffer index case (ex. buffer len = 5, buffer index = 10)
+          break;
+        case 'delete':
+          this._model.buffers.splice(bufferIdx, 1);
+          break;
+        case 'edit': {
+          let pageIdx = message.pageIdx-1;
+          let bufferData:number[] = JSON.parse(message.data);
+          this.modelBufferArray[bufferIdx][pageIdx] = bufferData;
+          break;
+        }
+        default:
+          break;
+      }
+    } catch (e) {
+      this._model = this.loadModel(oldModelData);
+      Balloon.error('invalid request', false);
+      return;
     }
     const newModelData = this.modelData;
     this.notifyEdit(oldModelData, newModelData);

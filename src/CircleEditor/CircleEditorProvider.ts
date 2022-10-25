@@ -170,7 +170,7 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
         document.makeEdit(message);
         return;
       case 'openJsonEditor':
-        document.openJsonEditor();
+        document.setBufferArray();
         return;
       case MessageDefs.loadJson:
         if(message.type === 'entireModel') {
@@ -203,7 +203,7 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
             document.editJsonModelSubgraphs(message.data);
             return;
           }else if(message.part === 'buffers') {
-            document.editJsonModelBuffers(message.data);
+            document.editJsonModelBuffers(message);
             return;
           }else{
             return;
@@ -211,6 +211,8 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
         }else{
           return;
         }
+      case 'applyJsonToModel':
+        return;
       case MessageDefs.getCustomOpAttrT:
         document.setCustomOpAttrT(message);
         return;
