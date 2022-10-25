@@ -381,7 +381,11 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
         tmpIdx+=300000;
       }
     }
-    this._onDidChangeContent.fire({command: 'openJsonEditor',
+    this.loadModelIndexInfo();
+  }
+  
+  loadModelIndexInfo() {
+    this._onDidChangeContent.fire({command: 'modelIndexInfo',
     data: {subgraphLen: this._model.subgraphs.length, bufferLen: this._model.buffers.length}});
   }
 
@@ -600,19 +604,24 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     }
   }
 
+  //TODO: divide 2 cases
+  //      1. temporary edit, which is only reflected to modelBufferArray
+  //      2. apply edits to modelT
   editJsonModelBuffers(message: any) {
     const oldModelData = this.modelData;
     try{
       let bufferIdx:number = message.bufferIdx;
       switch (message.type) {
         case 'add':
-          this._model.buffers.splice(bufferIdx, 0, new Circle.BufferT([]));
           //TODO: wrong buffer index case (ex. buffer len = 5, buffer index = 10)
+          this._model.buffers.splice(bufferIdx, 0, new Circle.BufferT([]));
+          this.modelBufferArray.splice(bufferIdx, 0, [[]]);
           break;
         case 'delete':
           this._model.buffers.splice(bufferIdx, 1);
+          this.modelBufferArray.splice(bufferIdx, 1);
           break;
-        case 'edit': {
+        case 'temporaryEdit': {
           let pageIdx = message.pageIdx-1;
           let bufferData:number[] = JSON.parse(message.data);
           this.modelBufferArray[bufferIdx][pageIdx] = bufferData;
