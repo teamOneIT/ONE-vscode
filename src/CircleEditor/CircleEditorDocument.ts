@@ -607,11 +607,11 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
   //TODO: divide 2 cases
   //      1. temporary edit, which is only reflected to modelBufferArray
   //      2. apply edits to modelT
-  editJsonModelBuffers(message: any) {
+  editJsonModelBuffers(messageData: any) {
     const oldModelData = this.modelData;
     try{
-      let bufferIdx:number = message.bufferIdx;
-      switch (message.type) {
+      let bufferIdx:number = messageData.bufferIdx;
+      switch (messageData.case) {
         case 'add':
           //TODO: wrong buffer index case (ex. buffer len = 5, buffer index = 10)
           this._model.buffers.splice(bufferIdx, 0, new Circle.BufferT([]));
@@ -622,9 +622,9 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
           this.modelBufferArray.splice(bufferIdx, 1);
           break;
         case 'temporaryEdit': {
-          let pageIdx = message.pageIdx-1;
-          let bufferData:number[] = JSON.parse(message.data);
-          this.modelBufferArray[bufferIdx][pageIdx] = bufferData;
+          let pageIdx = messageData.pageIdx-1;
+          let inputData:number[] = JSON.parse(messageData.inputData);
+          this.modelBufferArray[bufferIdx][pageIdx] = inputData;
           break;
         }
         default:

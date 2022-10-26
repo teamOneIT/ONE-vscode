@@ -203,7 +203,7 @@ export class CircleEditorProvider implements vscode.CustomEditorProvider<CircleE
             document.editJsonModelSubgraphs(message.data);
             return;
           }else if(message.part === 'buffers') {
-            document.editJsonModelBuffers(message);
+            document.editJsonModelBuffers(message.data);
             return;
           }else{
             return;
