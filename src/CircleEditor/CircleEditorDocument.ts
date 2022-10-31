@@ -25,6 +25,15 @@ import * as Circle from './circle_schema_generated';
 import * as Types from './CircleType';
 
 /**
+ * This is enum for describe json edit action.
+ */
+const enum jsonAction{
+  INSERT,
+  REPLACE,
+  REMOVE,
+}
+
+/**
  * Custom Editor Document necessary for vscode extension API
  * This class contains model object as _model variable
  * and manages its state when modification is occured.
@@ -474,24 +483,18 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
   }
 
   /**
-   * This method is used for add, remove, replace subgraph data.
-   * When index is -1, subgraph is added to subgraphs.
-   * When subgraphString is null, subgraph of that index is removed.
+   * This method is used for insert, replace, remove subgraph data.
    * @param index An element at this index will be changed.
+   * @param action jsonAction.INSERT, jsonAction.REPLACE, jsonAction.REMOVE
    * @param subgraphString string for new subgraph data
    */
-  editJsonModelSubgraphs(index: number, subgraphString: string|null = null) {
+  editJsonModelSubgraphs(index: number, action: jsonAction, subgraphString: string|null = null) {
     const oldModelData = this.modelData;
     try {
-      if (subgraphString === null) {
-        // remove subgraph
-        if (index >= 0 && index < this._model.buffers.length) {
-          this._model.subgraphs.splice(index, 1);
-        } else {
-          throw new Error;
-        }
-      } else {
-        let subgraphData = JSON.parse(subgraphString);
+      let subgraphData;
+      let subgraphObject;
+      if(subgraphString && action !== jsonAction.REMOVE) {
+        subgraphData = JSON.parse(subgraphString);
         // tensors
         subgraphData.tensors = subgraphData.tensors.map((tensor: Circle.TensorT) => {
           if (tensor.quantization) {
@@ -584,17 +587,33 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
           }
           return Object.setPrototypeOf(operator, Circle.OperatorT.prototype);
         });
-        const subgraphObejct = Object.setPrototypeOf(subgraphData, Circle.SubGraphT.prototype);
+        subgraphObject = Object.setPrototypeOf(subgraphData, Circle.SubGraphT.prototype);
+      }
 
-        if (index === -1) {
-          // add new subgraph
-          this._model.subgraphs.push(subgraphObejct);
-        } else if(index >= 0 && index < this._model.buffers.length) {
-          // replace old subgraph with new subgraph
-          this._model.subgraphs[index] = subgraphObejct;
-        } else {
+      switch (action) {
+        case jsonAction.INSERT:
+          if (subgraphObject && index >= 0 && index < this._model.buffers.length) {
+            this._model.subgraphs.splice(index, 0, subgraphObject);
+          } else {
+            throw new Error;
+          }
+          break;
+        case jsonAction.REPLACE:
+          if (subgraphObject && index >= 0 && index < this._model.buffers.length) {
+            this._model.subgraphs[index] = subgraphObject;
+          } else {
+            throw new Error;
+          }
+          break;
+        case jsonAction.REMOVE:
+          if (index >= 0 && index < this._model.buffers.length) {
+            this._model.subgraphs.splice(index, 1);
+          } else {
+            throw new Error;
+          }
+          break;
+        default:
           throw new Error;
-        }
       }
       const newModelData = this.modelData;
       this.notifyEdit(oldModelData, newModelData);
