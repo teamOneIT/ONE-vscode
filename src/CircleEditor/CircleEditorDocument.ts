@@ -399,12 +399,13 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
   }
 
   loadJsonModelOptions() {
-    //TODO: stringify bigint type data
     let optionData:string = '';
     Object.entries(this._model).forEach(e => {
       if(e[0]==='subgraphs'||e[0]==='buffers'){return;}
       optionData+=`'${e[0]}':`;
-      optionData+=((typeof e[1] === 'string')?e[1]:JSON.stringify(e[1]))+',\n';
+      optionData+=JSON.stringify(e[1], (_, v) => {
+        return typeof v === 'bigint' ? v.toString() : v;
+      })+',\n';
     });
     optionData = optionData.slice(0,-2);
     this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'options', data: optionData});
@@ -421,10 +422,12 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
   loadJsonModelBuffers(message:any){
     let bufferIdx:number = message.bufferIdx;
     let pageIdx:number = message.pageIdx-1; //index starts from 0
-//TODO: exception when out of range
     let value = this.modelBufferArray[bufferIdx][pageIdx];
-    this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'buffers', data: JSON.stringify(value)});
-    //TODO: 대괄호 처리
+    if (value === undefined) {
+      Balloon.error('buffer index out of range.', false);
+    }
+    const data = JSON.stringify(value).replace('[', '').replace(']', '').trim()
+    this._onDidChangeContent.fire({command: 'loadJsonMulti', type: 'buffers', data});
   }
 
   trimString(str:string): string {
@@ -631,21 +634,31 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
     try{
       let bufferIdx:number = messageData.bufferIdx;
       switch (messageData.case) {
-        case 'add':
-          //TODO: wrong buffer index case (ex. buffer len = 5, buffer index = 10)
+        case jsonAction.INSERT: // add
+          if (bufferIdx < 0 || bufferIdx > this._model.buffers.length) {
+            // wrong buffer index case
+            throw new Error;
+          }
           this._model.buffers.splice(bufferIdx, 0, new Circle.BufferT([]));
           this.modelBufferArray.splice(bufferIdx, 0, [[]]);
           break;
-        case 'delete':
-          this._model.buffers.splice(bufferIdx, 1);
-          this.modelBufferArray.splice(bufferIdx, 1);
-          break;
-        case 'temporaryEdit': {
-          let pageIdx = messageData.pageIdx-1;
+        case jsonAction.REPLACE: // temporaryEdit
+          let pageIdx = messageData.pageIdx - 1;
+          if (this.modelBufferArray[bufferIdx][pageIdx] === undefined) {
+            // wrong buffer index case
+            throw new Error;
+          }
           let inputData:number[] = JSON.parse(messageData.inputData);
           this.modelBufferArray[bufferIdx][pageIdx] = inputData;
           break;
-        }
+        case jsonAction.REMOVE: // delete
+          if (this._model.buffers[bufferIdx] === undefined) {
+            // wrong buffer index case
+            throw new Error;
+          }
+          this._model.buffers.splice(bufferIdx, 1);
+          this.modelBufferArray.splice(bufferIdx, 1);
+          break;
         default:
           break;
       }
