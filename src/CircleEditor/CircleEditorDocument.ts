@@ -28,9 +28,9 @@ import * as Types from './CircleType';
  * This is enum for describe json edit action.
  */
 const enum jsonAction{
-  INSERT,
-  REPLACE,
-  REMOVE,
+  INSERT = "insert",
+  REPLACE = "replace",
+  REMOVE = "remove",
 }
 
 /**
@@ -491,9 +491,10 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
    * @param action jsonAction.INSERT, jsonAction.REPLACE, jsonAction.REMOVE
    * @param subgraphString string for new subgraph data
    */
-  editJsonModelSubgraphs(index: number, action: jsonAction, subgraphString: string|null = null) {
+  editJsonModelSubgraphs(message: any) {
     const oldModelData = this.modelData;
     try {
+      const { index, action, subgraphString } = message;
       let subgraphData;
       let subgraphObject;
       if(subgraphString && action !== jsonAction.REMOVE) {
@@ -648,8 +649,17 @@ export class CircleEditorDocument extends Disposable implements vscode.CustomDoc
             // wrong buffer index case
             throw new Error;
           }
-          let inputData:number[] = JSON.parse(messageData.inputData);
+          let inputData: number[] = JSON.parse(messageData.inputData);
+
+          let start = 0;
+          for (let i = 0; i < pageIdx; i++){
+            start += this.modelBufferArray[bufferIdx][i].length;
+          }
+
+          let len = this.modelBufferArray[bufferIdx][pageIdx].length;
+
           this.modelBufferArray[bufferIdx][pageIdx] = inputData;
+          this._model.buffers[bufferIdx].data.splice(start, len, this.modelBufferArray[bufferIdx][pageIdx]);
           break;
         case jsonAction.REMOVE: // delete
           if (this._model.buffers[bufferIdx] === undefined) {
